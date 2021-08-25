@@ -1,0 +1,31 @@
+name: Lint
+# Lint runs golangci-lint over the entire akcmd repository
+# This workflow is run on every pull request and push to master
+# The `golangci` will pass without running if no *.{go, mod, sum} files have been changed.
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - main
+  pull_request:
+jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: technote-space/get-diff-action@v4
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          # Optional: version of golangci-lint to use in form of v1.2 or v1.2.3 or `latest` to use the latest version
+          version: v1.42
+          args: --timeout 10m
+        if: env.GIT_DIFF
