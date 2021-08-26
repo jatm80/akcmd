@@ -10,11 +10,8 @@ func Cmd() *gcli.Command {
 			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{closeCMD(), pauseCMD(), startCMD()},
 	}
-
-	cmd.Add(closeCMD())
-	cmd.Add(pauseCMD())
-	cmd.Add(startCMD())
 
 	return cmd
 }

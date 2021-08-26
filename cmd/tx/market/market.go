@@ -14,10 +14,8 @@ func Cmd() *gcli.Command {
 			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{bid.Cmd(), lease.Cmd()},
 	}
-
-	cmd.Add(bid.Cmd())
-	cmd.Add(lease.Cmd())
 
 	return cmd
 }

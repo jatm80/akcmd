@@ -13,9 +13,8 @@ func Cmd() *gcli.Command {
 			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{attr.Cmd()},
 	}
-
-	cmd.Add(attr.Cmd())
 
 	return cmd
 }

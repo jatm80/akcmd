@@ -14,14 +14,11 @@ func Cmd() *gcli.Command {
 			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{
+			createCMD(), updateCMD(), depositCMD(), closeCMD(),
+			group.Cmd(), authz.Cmd(),
+		},
 	}
-
-	cmd.Add(createCMD())
-	cmd.Add(updateCMD())
-	cmd.Add(depositCMD())
-	cmd.Add(closeCMD())
-	cmd.Add(group.Cmd())
-	cmd.Add(authz.Cmd())
 
 	return cmd
 }

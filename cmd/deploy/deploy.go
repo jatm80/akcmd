@@ -4,18 +4,17 @@ import (
 	"github.com/gookit/gcli/v3"
 )
 
-func Cmd(app *gcli.App) *gcli.Command {
+func Cmd() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "deploy",
 		// allow color tag and {$cmd} will be replace to 'demo'
 		Desc: "Interact with deployments within the Akash Project",
 		Func: func(cmd *gcli.Command, args []string) error {
-			app.Run([]string{"deploy", "-h"})
+			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{createCMD()},
 	}
-
-	cmd.Add(createCMD())
 
 	return cmd
 }

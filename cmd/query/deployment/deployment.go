@@ -13,11 +13,8 @@ func Cmd() *gcli.Command {
 			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{listCMD(), getCMD(), group.Cmd()},
 	}
-
-	cmd.Add(listCMD())
-	cmd.Add(getCMD())
-	cmd.Add(group.Cmd())
 
 	return cmd
 }
