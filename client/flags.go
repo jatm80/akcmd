@@ -1,16 +1,15 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"math"
 
-	"github.com/pkg/errors"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gookit/gcli/v3"
 	dtypes "github.com/ovrclk/akash/x/deployment/types"
 	mtypes "github.com/ovrclk/akash/x/market/types"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 var (
@@ -20,6 +19,7 @@ var (
 	deploymentIDOpts     = dtypes.DeploymentID{}
 	gSeq                 uint64
 	oSeq                 uint64
+	provider             string
 )
 
 type QueryOpts struct {
@@ -44,7 +44,7 @@ func AddQueryFlagsToCmd(cmd *gcli.Command) {
 		"<host>:<port> to Tendermint RPC interface for this chain")
 	cmd.Int64Opt(&qryOpts.Height, flags.FlagHeight, "", 0,
 		"Use a specific height to query state at (this can error if the node is pruning state)")
-	cmd.StrOpt(&qryOpts.Output, tmcli.OutputFlag, "o", "text", "Output format (text|json)")
+	cmd.StrOpt(&qryOpts.Output, "output", "o", "text", "Output format (text|json)")
 
 	cmd.Required(flags.FlagChainID)
 }
@@ -171,4 +171,98 @@ func OrderIDFromFlags() (mtypes.OrderID, error) {
 		return mtypes.OrderID{}, err
 	}
 	return mtypes.MakeOrderID(gID, val), nil
+}
+
+func AddBidFilterFlags(cmd *gcli.Command) {
+	cmd.StrOpt(&deploymentFilterOpts.Owner, "owner", "", "", "bid owner address to filter")
+	cmd.StrOpt(&deploymentFilterOpts.State, "state", "", "", "bid state to filter (open,matched,lost,closed)")
+	cmd.Uint64Opt(&deploymentFilterOpts.DSeq, "dseq", "", 0, "deployment sequence to filter")
+	cmd.Uint64Opt(&gSeq, "gseq", "", 1, "group sequence to filter")
+	cmd.Uint64Opt(&oSeq, "oseq", "", 1, "order sequence to filter")
+	cmd.StrOpt(&provider, "provider", "", "", "bid provider address to filter")
+}
+
+func BidFiltersFromFlags() (mtypes.BidFilters, error) {
+	oFilters, err := OrderFiltersFromFlags()
+	if err != nil {
+		return mtypes.BidFilters{}, err
+	}
+	bFilters := mtypes.BidFilters{
+		Owner: oFilters.Owner,
+		DSeq:  oFilters.DSeq,
+		GSeq:  oFilters.GSeq,
+		OSeq:  oFilters.OSeq,
+		State: oFilters.State,
+	}
+	bFilters.Provider, err = getProviderFilter()
+	if err != nil {
+		return mtypes.BidFilters{}, err
+	}
+	return bFilters, nil
+}
+
+func getProviderFilter() (string, error) {
+	if provider != "" {
+		_, err := sdk.AccAddressFromBech32(provider)
+		if err != nil {
+			return "", err
+		}
+	}
+	return provider, nil
+}
+
+func AddProviderFlag(cmd *gcli.Command) {
+	cmd.StrOpt(&provider, "provider", "", "", "Provider")
+}
+
+func MarkReqProviderFlag(cmd *gcli.Command) {
+	cmd.Required("provider")
+}
+
+func ProviderFromFlag() (sdk.AccAddress, error) {
+	return sdk.AccAddressFromBech32(provider)
+}
+
+func AddBidIDFlags(cmd *gcli.Command) {
+	AddOrderIDFlags(cmd)
+	AddProviderFlag(cmd)
+}
+
+func AddQueryBidIDFlags(cmd *gcli.Command) {
+	AddBidIDFlags(cmd)
+}
+
+func MarkReqBidIDFlags(cmd *gcli.Command) {
+	MarkReqOrderIDFlags(cmd)
+	MarkReqProviderFlag(cmd)
+}
+
+func BidIDFromFlags() (mtypes.BidID, error) {
+	prev, err := OrderIDFromFlags()
+	if err != nil {
+		return mtypes.BidID{}, err
+	}
+
+	providerAddr, err := ProviderFromFlag()
+	if err != nil {
+		return mtypes.BidID{}, err
+	}
+	return mtypes.MakeBidID(prev, providerAddr), nil
+}
+
+func AddLeaseFilterFlags(cmd *gcli.Command) {
+	cmd.StrOpt(&deploymentFilterOpts.Owner, "owner", "", "", "lease owner address to filter")
+	cmd.StrOpt(&deploymentFilterOpts.State, "state", "", "", "lease state to filter (active,insufficient_funds,closed)")
+	cmd.Uint64Opt(&deploymentFilterOpts.DSeq, "dseq", "", 0, "deployment sequence to filter")
+	cmd.Uint64Opt(&gSeq, "gseq", "", 1, "group sequence to filter")
+	cmd.Uint64Opt(&oSeq, "oseq", "", 1, "order sequence to filter")
+	cmd.StrOpt(&provider, "provider", "", "", "bid provider address to filter")
+}
+
+func LeaseFiltersFromFlags() (mtypes.LeaseFilters, error) {
+	bFilters, err := BidFiltersFromFlags()
+	if err != nil {
+		return mtypes.LeaseFilters{}, err
+	}
+	return mtypes.LeaseFilters(bFilters), nil
 }

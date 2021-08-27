@@ -2,13 +2,13 @@ package cert
 
 import (
 	"context"
+	"errors"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gookit/gcli/v3"
 	"github.com/ovrclk/akash/x/cert/types"
 	"github.com/ovrclk/akcmd/client"
-	"github.com/pkg/errors"
 )
 
 func Cmd() *gcli.Command {
@@ -70,7 +70,7 @@ func listCMD() *gcli.Command {
 
 			if listOpts.Serial != "" {
 				if params.Filter.Owner == "" {
-					return errors.Errorf("--serial flag requires --owner to be set")
+					return errors.New("--serial flag requires --owner to be set")
 				}
 				val, valid := new(big.Int).SetString(listOpts.Serial, 10)
 				if !valid {
@@ -82,7 +82,7 @@ func listCMD() *gcli.Command {
 
 			if listOpts.State != "" {
 				if listOpts.State != "valid" && listOpts.State != "revoked" {
-					return errors.Errorf("invalid value of --state flag. expected valid|revoked")
+					return errors.New("invalid value of --state flag. expected valid|revoked")
 				}
 
 				params.Filter.State = listOpts.State
