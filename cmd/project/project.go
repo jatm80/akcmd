@@ -4,18 +4,17 @@ import (
 	"github.com/gookit/gcli/v3"
 )
 
-func Cmd(app *gcli.App) *gcli.Command {
+func Cmd() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "project",
 		// allow color tag and {$cmd} will be replace to 'demo'
 		Desc: "Querying subcommands",
 		Func: func(cmd *gcli.Command, args []string) error {
-			app.Run([]string{"project", "-h"})
+			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{initCMD()},
 	}
-
-	cmd.Add(initCMD())
 
 	return cmd
 }

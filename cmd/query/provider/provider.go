@@ -1,6 +1,13 @@
 package provider
 
-import "github.com/gookit/gcli/v3"
+import (
+	"context"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/gookit/gcli/v3"
+	"github.com/ovrclk/akash/x/provider/types"
+	"github.com/ovrclk/akcmd/client"
+)
 
 func Cmd() *gcli.Command {
 	cmd := &gcli.Command{
@@ -10,10 +17,8 @@ func Cmd() *gcli.Command {
 			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{listCMD(), getCMD()},
 	}
-
-	cmd.Add(listCMD())
-	cmd.Add(getCMD())
 
 	return cmd
 }
@@ -22,9 +27,33 @@ func listCMD() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "list",
 		Desc: "Query for all providers",
+		Config: func(cmd *gcli.Command) {
+			client.AddQueryFlagsToCmd(cmd)
+			client.AddPaginationFlagsToCmd(cmd, "providers")
+		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			cmd.ShowHelp()
-			return nil
+			clientCtx, err := client.GetClientQueryContext()
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			pageReq, err := client.ReadPageRequest()
+			if err != nil {
+				return err
+			}
+
+			params := &types.QueryProvidersRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.Providers(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 
@@ -35,9 +64,30 @@ func getCMD() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "get",
 		Desc: "Query provider",
+		Config: func(cmd *gcli.Command) {
+			client.AddQueryFlagsToCmd(cmd)
+
+			cmd.AddArg("owner", "owner address", true)
+		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			cmd.ShowHelp()
-			return nil
+			clientCtx, err := client.GetClientQueryContext()
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			owner, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.Provider(context.Background(), &types.QueryProviderRequest{Owner: owner.String()})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(&res.Provider)
 		},
 	}
 

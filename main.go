@@ -33,14 +33,14 @@ func main() {
 	}
 
 	// add commands to the CLI
-	app.Add(account.Cmd(app))
-	app.Add(config.Cmd(app, configOptions))
-	app.Add(deploy.Cmd(app))
-	app.Add(node.Cmd(app))
-	app.Add(project.Cmd(app))
-	app.Add(provider.Cmd(app))
-	app.Add(query.Cmd(app))
-	app.Add(tx.Cmd(app))
+	app.Add(account.Cmd())
+	app.Add(config.Cmd(configOptions))
+	app.Add(deploy.Cmd())
+	app.Add(node.Cmd())
+	app.Add(project.Cmd())
+	app.Add(provider.Cmd())
+	app.Add(query.Cmd())
+	app.Add(tx.Cmd())
 	app.Add(versionCMD(app))
 	app.Add(welcome.Cmd(app))
 

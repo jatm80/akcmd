@@ -9,22 +9,19 @@ import (
 	"github.com/ovrclk/akcmd/cmd/tx/provider"
 )
 
-func Cmd(app *gcli.App) *gcli.Command {
+func Cmd() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "tx",
 		// allow color tag and {$cmd} will be replace to 'demo'
 		Desc: "Transactions subcommands",
 		Func: func(cmd *gcli.Command, args []string) error {
-			app.Run([]string{"tx", "-h"})
+			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{
+			audit.Cmd(), cert.Cmd(), deployment.Cmd(), market.Cmd(), provider.Cmd(),
+		},
 	}
-
-	cmd.Add(audit.Cmd())
-	cmd.Add(cert.Cmd())
-	cmd.Add(deployment.Cmd())
-	cmd.Add(market.Cmd())
-	cmd.Add(provider.Cmd())
 
 	return cmd
 }

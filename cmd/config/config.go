@@ -90,14 +90,14 @@ func LoadConfig(app *gcli.App, options Options) bool {
 	return false
 }
 
-func Cmd(app *gcli.App, options Options) *gcli.Command {
+func Cmd(options Options) *gcli.Command {
 	localizedStrings := l10n.GetLocalizationStrings()
 
 	cmd := &gcli.Command{
 		Name: "config",
 		Desc: localizedStrings.Command["config"],
 		Func: func(cmd *gcli.Command, args []string) error {
-			app.Run([]string{"config", "-h"})
+			cmd.ShowHelp()
 			return nil
 		},
 		Subs: []*gcli.Command{

@@ -4,18 +4,17 @@ import (
 	"github.com/gookit/gcli/v3"
 )
 
-func Cmd(app *gcli.App) *gcli.Command {
+func Cmd() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "node",
 		// allow color tag and {$cmd} will be replace to 'demo'
 		Desc: "Interact with and get information about Nodes",
 		Func: func(cmd *gcli.Command, args []string) error {
-			app.Run([]string{"node", "-h"})
+			cmd.ShowHelp()
 			return nil
 		},
+		Subs: []*gcli.Command{statusCMD()},
 	}
-
-	cmd.Add(statusCMD())
 
 	return cmd
 }
