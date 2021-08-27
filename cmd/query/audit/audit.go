@@ -33,14 +33,14 @@ func listCMD() *gcli.Command {
 			client.AddPaginationFlagsToCmd(cmd, "providers")
 		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientQueryContext()
 			if err != nil {
 				return err
 			}
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			pageReq, err := client.ReadPageRequest(cmd)
+			pageReq, err := client.ReadPageRequest()
 			if err != nil {
 				return err
 			}
@@ -72,7 +72,7 @@ func getCMD() *gcli.Command {
 			cmd.AddArg("auditor", "auditor address", false)
 		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			clientCtx, err := client.GetClientQueryContext(cmd)
+			clientCtx, err := client.GetClientQueryContext()
 			if err != nil {
 				return err
 			}

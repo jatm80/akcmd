@@ -703,8 +703,8 @@ github.com/otiai10/curr v0.0.0-20150429015615-9b4961190c95/go.mod h1:9qAhocn7zKJ
 github.com/otiai10/curr v1.0.0/go.mod h1:LskTG5wDwr8Rs+nNQ+1LlxRjAtTZZjtJW4rMXl6j4vs=
 github.com/otiai10/mint v1.3.0/go.mod h1:F5AjcsTsWUqX+Na9fpHb52P8pcRX2CI6A3ctIT91xUo=
 github.com/otiai10/mint v1.3.2/go.mod h1:/yxELlJQ0ufhjUwhshSj+wFjZ78CnZ48/1wtmBH1OTc=
-github.com/ovrclk/akash v0.12.3-0.20210819124457-a7163d0db50d h1:RyAfWZYX4wSWXwvbWQklkzmCmlUsr3FcCIMgOvGpr4I=
-github.com/ovrclk/akash v0.12.3-0.20210819124457-a7163d0db50d/go.mod h1:g5BVjwG4fZNs6RtRnyz6Sycw7eshlq6y1atyFYDIxfQ=
+github.com/ovrclk/akash v0.12.3-0.20210827015049-b14f823daf69 h1:DIDm22A61QGmQlJPztGW2hGuyRafNLi9Nfjd2OqRhRo=
+github.com/ovrclk/akash v0.12.3-0.20210827015049-b14f823daf69/go.mod h1:9nTS0DWuAKw9fNDAMRjGyU3fCuzKMK9rZ2URqDNGKMY=
 github.com/pact-foundation/pact-go v1.0.4/go.mod h1:uExwJY4kCzNPcHRj+hCR/HBbOOIwwtUjcrb0b5/5kLM=
 github.com/pascaldekloe/goe v0.0.0-20180627143212-57f6aae5913c/go.mod h1:lzWF7FIEvWOWxwDKqyGYQf6ZUaNfKdP144TG7ZOy1lc=
 github.com/pascaldekloe/goe v0.1.0 h1:cBOtyMzM9HTpWjXfbbunk26uA6nG3a8n06Wieeh0MwY=
