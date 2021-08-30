@@ -1,6 +1,10 @@
 package group
 
-import "github.com/gookit/gcli/v3"
+import (
+	"github.com/gookit/gcli/v3"
+	"github.com/ovrclk/akash/x/deployment/types"
+	"github.com/ovrclk/akcmd/client"
+)
 
 func Cmd() *gcli.Command {
 	cmd := &gcli.Command{
@@ -20,9 +24,31 @@ func closeCMD() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "close",
 		Desc: "close a Deployment's specific Group",
+		Config: func(cmd *gcli.Command) {
+			client.AddTxFlagsToCmd(cmd)
+			client.AddGroupIDFlags(cmd)
+			client.MarkReqGroupIDFlags(cmd)
+		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			cmd.ShowHelp()
-			return nil
+			clientCtx, err := client.GetClientTxContext()
+			if err != nil {
+				return err
+			}
+
+			id, err := client.GroupIDFromFlags()
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgCloseGroup{
+				ID: id,
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return client.BroadcastTX(clientCtx, msg)
 		},
 	}
 
@@ -33,9 +59,31 @@ func pauseCMD() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "pause",
 		Desc: "pause a Deployment's specific Group",
+		Config: func(cmd *gcli.Command) {
+			client.AddTxFlagsToCmd(cmd)
+			client.AddGroupIDFlags(cmd)
+			client.MarkReqGroupIDFlags(cmd)
+		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			cmd.ShowHelp()
-			return nil
+			clientCtx, err := client.GetClientTxContext()
+			if err != nil {
+				return err
+			}
+
+			id, err := client.GroupIDFromFlags()
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgPauseGroup{
+				ID: id,
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return client.BroadcastTX(clientCtx, msg)
 		},
 	}
 
@@ -46,9 +94,31 @@ func startCMD() *gcli.Command {
 	cmd := &gcli.Command{
 		Name: "start",
 		Desc: "start a Deployment's specific Group",
+		Config: func(cmd *gcli.Command) {
+			client.AddTxFlagsToCmd(cmd)
+			client.AddGroupIDFlags(cmd)
+			client.MarkReqGroupIDFlags(cmd)
+		},
 		Func: func(cmd *gcli.Command, args []string) error {
-			cmd.ShowHelp()
-			return nil
+			clientCtx, err := client.GetClientTxContext()
+			if err != nil {
+				return err
+			}
+
+			id, err := client.GroupIDFromFlags()
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgStartGroup{
+				ID: id,
+			}
+
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return client.BroadcastTX(clientCtx, msg)
 		},
 	}
 

@@ -53,7 +53,10 @@ func blocksRemainingCMD() *gcli.Command {
 			marketClient := marketTypes.NewQueryClient(clientCtx)
 			ctx := context.Background()
 
-			id := client.DeploymentIDFromFlags()
+			id, err := client.DeploymentIDFromFlags()
+			if err != nil {
+				return err
+			}
 
 			// Fetch leases matching owner & dseq
 			leaseRequest := marketTypes.QueryLeasesRequest{

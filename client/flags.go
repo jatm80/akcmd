@@ -4,10 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gookit/gcli/v3"
+	dcli "github.com/ovrclk/akash/x/deployment/client/cli"
 	dtypes "github.com/ovrclk/akash/x/deployment/types"
 	mtypes "github.com/ovrclk/akash/x/market/types"
 )
@@ -21,6 +24,9 @@ var (
 	gSeq                 uint64
 	oSeq                 uint64
 	provider             string
+	deposit              string
+	depositorAcc         string
+	expiration           int64
 )
 
 type QueryOpts struct {
@@ -165,12 +171,29 @@ func AddDeploymentIDFlags(cmd *gcli.Command) {
 	cmd.Uint64Opt(&deploymentIDOpts.DSeq, "dseq", "", 0, "Deployment Sequence")
 }
 
-func MarkReqDeploymentIDFlags(cmd *gcli.Command) {
+func MarkReqDeploymentIDFlags(cmd *gcli.Command, opts ...dcli.DeploymentIDOption) {
+	// TODO: update the code here once dcli.deploymentIDOption{} is made public in akash repo
 	cmd.Required("owner", "dseq")
 }
 
-func DeploymentIDFromFlags() dtypes.DeploymentID {
-	return deploymentIDOpts
+func DeploymentIDFromFlags(opts ...dcli.MarketOption) (dtypes.DeploymentID, error) {
+	opt := &dcli.MarketOptions{}
+
+	for _, o := range opts {
+		o(opt)
+	}
+
+	// if --owner flag was explicitly provided, use that.
+	if deploymentIDOpts.Owner != "" {
+		var err error
+		opt.Owner, err = sdk.AccAddressFromBech32(deploymentIDOpts.Owner)
+		if err != nil {
+			return deploymentIDOpts, err
+		}
+	}
+	deploymentIDOpts.Owner = opt.Owner.String()
+
+	return deploymentIDOpts, nil
 }
 
 func AddGroupIDFlags(cmd *gcli.Command) {
@@ -178,16 +201,21 @@ func AddGroupIDFlags(cmd *gcli.Command) {
 	cmd.Uint64Opt(&gSeq, "gseq", "", 1, "Group Sequence")
 }
 
-func MarkReqGroupIDFlags(cmd *gcli.Command) {
-	MarkReqDeploymentIDFlags(cmd)
+func MarkReqGroupIDFlags(cmd *gcli.Command, opts ...dcli.DeploymentIDOption) {
+	MarkReqDeploymentIDFlags(cmd, opts...)
 }
 
-func GroupIDFromFlags() (dtypes.GroupID, error) {
-	dID := DeploymentIDFromFlags()
+func GroupIDFromFlags(opts ...dcli.MarketOption) (dtypes.GroupID, error) {
+	dID, err := DeploymentIDFromFlags(opts...)
+	if err != nil {
+		return dtypes.GroupID{}, err
+	}
+
 	val, err := getGSeq()
 	if err != nil {
 		return dtypes.GroupID{}, err
 	}
+
 	return dtypes.MakeGroupID(dID, val), nil
 }
 
@@ -235,12 +263,12 @@ func AddOrderIDFlags(cmd *gcli.Command) {
 	cmd.Uint64Opt(&oSeq, "oseq", "", 1, "Order Sequence")
 }
 
-func MarkReqOrderIDFlags(cmd *gcli.Command) {
-	MarkReqGroupIDFlags(cmd)
+func MarkReqOrderIDFlags(cmd *gcli.Command, opts ...dcli.DeploymentIDOption) {
+	MarkReqGroupIDFlags(cmd, opts...)
 }
 
-func OrderIDFromFlags() (mtypes.OrderID, error) {
-	gID, err := GroupIDFromFlags()
+func OrderIDFromFlags(opts ...dcli.MarketOption) (mtypes.OrderID, error) {
+	gID, err := GroupIDFromFlags(opts...)
 	if err != nil {
 		return mtypes.OrderID{}, err
 	}
@@ -310,22 +338,46 @@ func AddQueryBidIDFlags(cmd *gcli.Command) {
 	AddBidIDFlags(cmd)
 }
 
-func MarkReqBidIDFlags(cmd *gcli.Command) {
-	MarkReqOrderIDFlags(cmd)
+func MarkReqBidIDFlags(cmd *gcli.Command, opts ...dcli.DeploymentIDOption) {
+	MarkReqOrderIDFlags(cmd, opts...)
 	MarkReqProviderFlag(cmd)
 }
 
-func BidIDFromFlags() (mtypes.BidID, error) {
-	prev, err := OrderIDFromFlags()
+func BidIDFromFlags(opts ...dcli.MarketOption) (mtypes.BidID, error) {
+	prev, err := OrderIDFromFlags(opts...)
 	if err != nil {
 		return mtypes.BidID{}, err
 	}
 
-	providerAddr, err := ProviderFromFlag()
-	if err != nil {
-		return mtypes.BidID{}, err
+	opt := &dcli.MarketOptions{}
+
+	for _, o := range opts {
+		o(opt)
 	}
-	return mtypes.MakeBidID(prev, providerAddr), nil
+
+	if opt.Provider.Empty() {
+		if opt.Provider, err = ProviderFromFlag(); err != nil {
+			return mtypes.BidID{}, err
+		}
+	}
+
+	return mtypes.MakeBidID(prev, opt.Provider), nil
+}
+
+func AddLeaseIDFlags(cmd *gcli.Command) {
+	AddBidIDFlags(cmd)
+}
+func MarkReqLeaseIDFlags(cmd *gcli.Command, opts ...dcli.DeploymentIDOption) {
+	MarkReqBidIDFlags(cmd, opts...)
+}
+
+func LeaseIDFromFlags(opts ...dcli.MarketOption) (mtypes.LeaseID, error) {
+	bid, err := BidIDFromFlags(opts...)
+	if err != nil {
+		return mtypes.LeaseID{}, err
+	}
+
+	return bid.LeaseID(), nil
 }
 
 func AddLeaseFilterFlags(cmd *gcli.Command) {
@@ -343,4 +395,39 @@ func LeaseFiltersFromFlags() (mtypes.LeaseFilters, error) {
 		return mtypes.LeaseFilters{}, err
 	}
 	return mtypes.LeaseFilters(bFilters), nil
+}
+
+func AddDepositFlags(cmd *gcli.Command, dflt sdk.Coin) {
+	cmd.StrOpt(&deposit, "deposit", "", dflt.String(), "Deposit amount")
+}
+
+func DepositFromFlags() (sdk.Coin, error) {
+	return sdk.ParseCoinNormalized(deposit)
+}
+
+// AddDepositorFlag adds the `--depositor-account` flag
+func AddDepositorFlag(cmd *gcli.Command) {
+	cmd.StrOpt(&depositorAcc, "depositor-account", "", "",
+		"Depositor account pays for the deposit instead of deducting from the owner")
+}
+
+// DepositorFromFlags returns the depositor account if one was specified in flags,
+// otherwise it returns the owner's account.
+func DepositorFromFlags(owner string) (string, error) {
+	// if no depositor is specified, owner is the default depositor
+	if strings.TrimSpace(depositorAcc) == "" {
+		return owner, nil
+	}
+
+	_, err := sdk.AccAddressFromBech32(depositorAcc)
+	return depositorAcc, err
+}
+
+func AddExpirationFlag(cmd *gcli.Command) {
+	cmd.Int64Opt(&expiration, "expiration", "", time.Now().AddDate(1, 0, 0).Unix(),
+		"The Unix timestamp. Default is one year.")
+}
+
+func ExpirationFromFlag() int64 {
+	return expiration
 }

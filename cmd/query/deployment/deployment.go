@@ -81,7 +81,10 @@ func getCMD() *gcli.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			id := client.DeploymentIDFromFlags()
+			id, err := client.DeploymentIDFromFlags()
+			if err != nil {
+				return err
+			}
 
 			res, err := queryClient.Deployment(context.Background(), &types.QueryDeploymentRequest{ID: id})
 			if err != nil {
