@@ -15,6 +15,7 @@ import (
 var (
 	qryOpts              = QueryOpts{}
 	pageOpts             = PaginationOpts{}
+	txOpts               = TransactionOpts{}
 	deploymentFilterOpts = dtypes.DeploymentFilters{}
 	deploymentIDOpts     = dtypes.DeploymentID{}
 	gSeq                 uint64
@@ -38,6 +39,31 @@ type PaginationOpts struct {
 	Reverse    bool
 }
 
+type TransactionOpts struct {
+	ChainID          string
+	Output           string
+	KeyringDir       string
+	From             string
+	AccountNumber    uint64
+	Sequence         uint64
+	Note             string
+	Fees             string
+	GasPrices        string
+	Node             string
+	UseLedger        bool
+	GasAdjustment    float64
+	BroadcastMode    string
+	DryRun           bool
+	GenerateOnly     bool
+	Offline          bool
+	SkipConfirmation bool
+	KeyringBackend   string
+	SignMode         string
+	TimeoutHeight    uint64
+	FeeAccount       string
+	Gas              string
+}
+
 func AddQueryFlagsToCmd(cmd *gcli.Command) {
 	cmd.StrOpt(&qryOpts.ChainID, flags.FlagChainID, "", "", "The network chain ID")
 	cmd.StrOpt(&qryOpts.Node, flags.FlagNode, "", "tcp://localhost:26657",
@@ -51,6 +77,58 @@ func AddQueryFlagsToCmd(cmd *gcli.Command) {
 
 func QueryFlagsFromCmd() QueryOpts {
 	return qryOpts
+}
+
+func AddTxFlagsToCmd(cmd *gcli.Command) {
+	cmd.StrOpt(&txOpts.ChainID, flags.FlagChainID, "", "", "The network chain ID")
+	cmd.StrOpt(&txOpts.Output, "output", "o", "json", "Output format (text|json)")
+	cmd.StrOpt(&txOpts.KeyringDir, flags.FlagKeyringDir, "", "",
+		"The client Keyring directory; if omitted, the default 'home' directory will be used")
+	cmd.StrOpt(&txOpts.From, flags.FlagFrom, "", "",
+		"Name or address of private key with which to sign")
+	cmd.Uint64Opt(&txOpts.AccountNumber, flags.FlagAccountNumber, "a", 0,
+		"The account number of the signing account (offline mode only)")
+	cmd.Uint64Opt(&txOpts.Sequence, flags.FlagSequence, "s", 0,
+		"The sequence number of the signing account (offline mode only)")
+	cmd.StrOpt(&txOpts.Note, flags.FlagNote, "", "",
+		"Note to add a description to the transaction (previously --memo)")
+	cmd.StrOpt(&txOpts.Fees, flags.FlagFees, "", "",
+		"Fees to pay along with transaction; eg: 10uatom")
+	cmd.StrOpt(&txOpts.GasPrices, flags.FlagGasPrices, "", "",
+		"Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)")
+	cmd.StrOpt(&txOpts.Node, flags.FlagNode, "", "tcp://localhost:26657",
+		"<host>:<port> to tendermint rpc interface for this chain")
+	cmd.BoolOpt(&txOpts.UseLedger, flags.FlagUseLedger, "", false, "Use a connected Ledger device")
+	cmd.Float64Opt(&txOpts.GasAdjustment, flags.FlagGasAdjustment, "", flags.DefaultGasAdjustment,
+		"adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
+	cmd.StrOpt(&txOpts.BroadcastMode, flags.FlagBroadcastMode, "b", flags.BroadcastSync,
+		"Transaction broadcasting mode (sync|async|block)")
+	cmd.BoolOpt(&txOpts.DryRun, flags.FlagDryRun, "", false,
+		"ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it")
+	cmd.BoolOpt(&txOpts.GenerateOnly, flags.FlagGenerateOnly, "", false,
+		"Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase is not accessible)")
+	cmd.BoolOpt(&txOpts.Offline, flags.FlagOffline, "", false,
+		"Offline mode (does not allow any online functionality")
+	cmd.BoolOpt(&txOpts.SkipConfirmation, flags.FlagSkipConfirmation, "y", false,
+		"Skip tx broadcasting prompt confirmation")
+	cmd.StrOpt(&txOpts.KeyringBackend, flags.FlagKeyringBackend, "", flags.DefaultKeyringBackend,
+		"Select keyring's backend (os|file|kwallet|pass|test|memory)")
+	cmd.StrOpt(&txOpts.SignMode, flags.FlagSignMode, "", "",
+		"Choose sign mode (direct|amino-json), this is an advanced feature")
+	cmd.Uint64Opt(&txOpts.TimeoutHeight, flags.FlagTimeoutHeight, "", 0,
+		"Set a block timeout height to prevent the tx from being committed past a certain height")
+	cmd.StrOpt(&txOpts.FeeAccount, flags.FlagFeeAccount, "", "",
+		"Fee account pays fees for the transaction instead of deducting from the signer")
+
+	// --gas can accept integers and "auto"
+	cmd.StrOpt(&txOpts.Gas, flags.FlagGas, "", "",
+		fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically (default %d)", flags.GasFlagAuto, flags.DefaultGasLimit))
+
+	cmd.Required(flags.FlagChainID)
+}
+
+func TxFlagsFromCmd() TransactionOpts {
+	return txOpts
 }
 
 func AddPaginationFlagsToCmd(cmd *gcli.Command, query string) {

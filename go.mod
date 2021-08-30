@@ -9,6 +9,7 @@ require (
 	github.com/gookit/gcli/v3 v3.0.0
 	github.com/gookit/rux v1.3.2
 	github.com/ovrclk/akash v0.12.3-0.20210827015049-b14f823daf69
+	github.com/pkg/errors v0.9.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
